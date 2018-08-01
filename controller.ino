@@ -35,6 +35,13 @@ boolean balanceStatus3 = false;
 boolean balanceStatus4 = false;
 boolean balanceStatus5 = false;
 
+int validate(const byte measurements[])
+{
+  int i = 16;
+  while (--i > 1 && measurements[i] == measurements[1]);
+  return i != 1;
+}
+
 void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte endIdx, byte groupNum) {
   unsigned long startTime = millis();
   digitalWrite(nextSerOut, HIGH);
@@ -93,10 +100,14 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
     String data; //Measuremets formated to JSON
     measurements[0].concat("\"voltage\":[");
     measurements[1].concat("\"temperature\":[");
-
+    
     for (int i = startIdx; i <= endIdx; i++) {
-      measurements[0].concat((cellVoltage[i] * 2.00) / 100.00);
-      measurements[1].concat(cellTemperature[i] + (180.00 - cellVoltage[i]));
+      char volt[10];
+      char temp[10];
+      dtostrf(((cellVoltage[i] * 2.00) / 100.00), 8, 3, volt);
+      dtostrf(cellTemperature[i] + (180.00 - cellVoltage[i]), 8, 3, temp);
+      measurements[0] += volt;
+      measurements[1] += temp;
       if (i < endIdx) measurements[0].concat(",");
       if (i < endIdx) measurements[1].concat(",");
     }
@@ -108,13 +119,6 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
     String _message = "{\"origin\":\"Controller\",\"type\":\"log\",\"msg\":\"Group " + String(groupNum) + " out of sync\",\"importance\":\"High\"}";
     Serial.println(_message);
   }
-}
-
-int validate(const byte measurements[])
-{
-  int i = 16;
-  while (--i > 1 && measurements[i] == measurements[1]);
-  return i != 1;
 }
 
 int main(void) {
@@ -168,7 +172,7 @@ int main(void) {
       Serial.println("$init");
       requestIndex++;
     }
-  } while (Serial.available() == 0 && requestIndex <= 5 == true); //Wait for response, if server does not respond => Use default settings
+  } while (Serial.available() == 0 && requestIndex <= (5 == true)); //Wait for response, if server does not respond => Use default settings
   digitalWrite(13, LOW);
   if (Serial.available() > 0) {
     firstGroupIndex = Serial.parseInt();
