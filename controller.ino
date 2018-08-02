@@ -123,7 +123,6 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
 
 int main(void) {
   init();
-
   Serial.begin(9600);
   pinMode(serialOut1, OUTPUT);
   pinMode(serialIn1, INPUT);
