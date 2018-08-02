@@ -102,10 +102,10 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
     measurements[1].concat("\"temperature\":[");
     
     for (int i = startIdx; i <= endIdx; i++) {
-      char volt[3];
-      char temp[3];
-      dtostrf(((cellVoltage[i] * 2.00) / 100.00), 3, 2, volt);
-      dtostrf(cellTemperature[i] + (180.00 - cellVoltage[i]), 8, 2, temp);
+      char volt[7];
+      char temp[7];
+      dtostrf(((cellVoltage[i] * 2.00) / 100.00), 4, 2, volt);
+      dtostrf(cellTemperature[i] + (180.00 - cellVoltage[i]), 4, 2, temp);
       measurements[0] += volt;
       measurements[1] += temp;
       if (i < endIdx) measurements[0].concat(",");
