@@ -102,10 +102,10 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
     measurements[1].concat("\"temperature\":[");
     
     for (int i = startIdx; i <= endIdx; i++) {
-      char volt[10];
-      char temp[10];
-      dtostrf(((cellVoltage[i] * 2.00) / 100.00), 8, 3, volt);
-      dtostrf(cellTemperature[i] + (180.00 - cellVoltage[i]), 8, 3, temp);
+      char volt[3];
+      char temp[3];
+      dtostrf(((cellVoltage[i] * 2.00) / 100.00), 3, 2, volt);
+      dtostrf(cellTemperature[i] + (180.00 - cellVoltage[i]), 8, 2, temp);
       measurements[0] += volt;
       measurements[1] += temp;
       if (i < endIdx) measurements[0].concat(",");
@@ -123,6 +123,7 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
 
 int main(void) {
   init();
+
   Serial.begin(9600);
   pinMode(serialOut1, OUTPUT);
   pinMode(serialIn1, INPUT);
@@ -171,7 +172,7 @@ int main(void) {
       Serial.println("$init");
       requestIndex++;
     }
-  } while (Serial.available() == 0 && requestIndex <= (5 == true)); //Wait for response, if server does not respond => Use default settings
+  } while (Serial.available() == 0 && requestIndex <= 5); //Wait for response, if server does not respond => Use default settings
   digitalWrite(13, LOW);
   if (Serial.available() > 0) {
     firstGroupIndex = Serial.parseInt();
