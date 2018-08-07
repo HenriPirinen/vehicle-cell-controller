@@ -121,6 +121,22 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
   }
 }
 
+void readSerialInput(){
+  /**
+   * 1XY = toggle balancer on/off X = Index, Y = State. 
+   * 110 = Set 2nd balancer LOW.
+   * 131 = Set 4th balancer HIGH.
+   */
+   byte balancePins[] = {A0, A1, A2, A3, A4};
+   char command[8];
+   for(int i = 0; Serial.available() > 0 && i < 8; i++){
+    command[i] = Serial.read();
+   }
+   if(command[0] == '1' && command[1] <= 4){
+      digitalWrite(balancePins[command[1]], command[2] == '1' ? HIGH : LOW);
+   }
+}
+
 int main(void) {
   init();
 
@@ -157,12 +173,15 @@ int main(void) {
   digitalWrite(DCDC3, LOW);
   digitalWrite(DCDC4, LOW);
   digitalWrite(DCDC5, LOW);
+  
 
   digitalWrite(serialLed1, HIGH);
   digitalWrite(serialLed2, HIGH);
   digitalWrite(serialLed3, HIGH);
 
-  //Request settings from servers
+  /**
+   * Request settings from servers
+   */
   unsigned long startTime = millis();
   byte requestIndex = 1;
   Serial.println("$init");
@@ -187,6 +206,7 @@ int main(void) {
     digitalWrite(serialLed2, LOW);
     digitalWrite(serialLed3, LOW);
     handleGroup(serialOut2, serialIn1, serialOut1, 1, 8, firstGroupIndex);
+    readSerialInput();
     delay(50);
     digitalWrite(serialLed1, LOW);
     digitalWrite(serialLed2, LOW);
@@ -196,6 +216,7 @@ int main(void) {
     digitalWrite(serialLed2, HIGH);
     digitalWrite(serialLed3, LOW);
     handleGroup(serialOut3, serialIn2, serialOut2, 9, 16, (firstGroupIndex + 1));
+    readSerialInput();
     delay(50);
     digitalWrite(serialLed1, LOW);
     digitalWrite(serialLed2, LOW);
@@ -205,6 +226,7 @@ int main(void) {
     digitalWrite(serialLed2, HIGH);
     digitalWrite(serialLed3, LOW);
     handleGroup(serialOut4, serialIn3, serialOut3, 17, 24, (firstGroupIndex + 2));
+    readSerialInput();
     delay(50);
     digitalWrite(serialLed1, LOW);
     digitalWrite(serialLed2, LOW);
@@ -214,6 +236,7 @@ int main(void) {
     digitalWrite(serialLed2, LOW);
     digitalWrite(serialLed3, HIGH);
     handleGroup(serialOut5, serialIn4, serialOut4, 25, 32, (firstGroupIndex + 3));
+    readSerialInput();
     delay(50);
     digitalWrite(serialLed1, LOW);
     digitalWrite(serialLed2, LOW);
@@ -223,6 +246,7 @@ int main(void) {
     digitalWrite(serialLed2, LOW);
     digitalWrite(serialLed3, HIGH);
     handleGroup(serialOut1, serialIn5, serialOut5, 33, 40, (firstGroupIndex + 4));
+    readSerialInput();
     delay(50);
     digitalWrite(serialLed1, LOW);
     digitalWrite(serialLed2, LOW);
