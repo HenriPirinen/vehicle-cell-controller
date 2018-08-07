@@ -132,8 +132,11 @@ void readSerialInput(){
    for(int i = 0; Serial.available() > 0 && i < 8; i++){
     command[i] = Serial.read();
    }
-   if(command[0] == '1' && command[1] <= 4){
-      digitalWrite(balancePins[command[1]], command[2] == '1' ? HIGH : LOW);
+   if(command[0] == '1'){
+      String groupNum = String(command[1] - 48) + String(command[2] == '1' ? 1 : 0);
+      String _confirm = "{\"origin\":\"Controller\",\"type\":\"param\",\"name\":\"balanceStatus\",\"value\":\"" + groupNum +"\",\"importance\":\"Low\"}";
+      digitalWrite(balancePins[(int)command[1] - 48], command[2] == '1' ? HIGH : LOW);
+      Serial.println(_confirm);
    }
 }
 
