@@ -165,11 +165,11 @@ int main(void) {
   pinMode(serialLed2, OUTPUT);
   pinMode(serialLed3, OUTPUT);
 
-  digitalWrite(serialOut1, HIGH);
-  digitalWrite(serialOut2, HIGH);
-  digitalWrite(serialOut3, HIGH);
-  digitalWrite(serialOut4, HIGH);
-  digitalWrite(serialOut5, HIGH);
+  digitalWrite(serialOut1, LOW);
+  digitalWrite(serialOut2, LOW);
+  digitalWrite(serialOut3, LOW);
+  digitalWrite(serialOut4, LOW);
+  digitalWrite(serialOut5, LOW);
 
   digitalWrite(DCDC1, LOW);
   digitalWrite(DCDC2, LOW);
