@@ -133,8 +133,8 @@ void readSerialInput(){
     command[i] = Serial.read();
    }
    if(command[0] == '1'){
-      String groupNum = String(command[1] - 48) + String(command[2] == '1' ? 1 : 0);
-      String _confirm = "{\"origin\":\"Controller\",\"type\":\"param\",\"name\":\"balanceStatus\",\"value\":\"" + groupNum +"\",\"importance\":\"Low\"}";
+      String state = String(command[1] - 48) + String(command[2] == '1' ? 1 : 0);
+      String _confirm = "{\"origin\":\"Controller\",\"type\":\"param\",\"name\":\"balanceStatus\",\"value\":" + state +",\"importance\":\"Low\"}";
       digitalWrite(balancePins[(int)command[1] - 48], command[2] == '1' ? HIGH : LOW);
       Serial.println(_confirm);
    }
