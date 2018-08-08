@@ -48,11 +48,11 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
   SoftwareSerial groupSerial(serIn, serOut, false); //RX, TX
   groupSerial.begin(1200);
 
-  groupSerial.write(165);      //hexA5
+  groupSerial.write(5);      //hexA5
   delay(20);
-  groupSerial.write(165);
+  groupSerial.write(5);
   delay(20);
-  groupSerial.write(165);
+  groupSerial.write(5);
   delay(20);
   groupSerial.write(13);
   delay(20);
