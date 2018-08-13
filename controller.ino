@@ -100,7 +100,7 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
     String data; //Measuremets formated to JSON
     measurements[0].concat("\"voltage\":[");
     measurements[1].concat("\"temperature\":[");
-    
+
     for (int i = startIdx; i <= endIdx; i++) {
       char volt[7];
       char temp[7];
@@ -121,23 +121,25 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
   }
 }
 
-void readSerialInput(){
+void readSerialInput() {
   /**
-   * 1XY = toggle balancer on/off X = Index, Y = State. 
-   * 110 = Set 2nd balancer LOW.
-   * 131 = Set 4th balancer HIGH.
-   */
-   byte balancePins[] = {A0, A1, A2, A3, A4};
-   char command[8];
-   for(int i = 0; Serial.available() > 0 && i < 8; i++){
+     1XY = toggle balancer on/off X = Index, Y = State.
+     110 = Set 2nd balancer LOW.
+     131 = Set 4th balancer HIGH.
+  */
+  byte balancePins[] = {A4, A3, A2, A1, A0};
+  char command[3];
+  bool ser = false;
+  for (int i = 0; Serial.available() > 0 && i < 3; i++) {
     command[i] = Serial.read();
-   }
-   if(command[0] == '1'){
-      String state = String(command[1] - 48) + String(command[2] == '1' ? 1 : 0);
-      String _confirm = "{\"origin\":\"Controller\",\"type\":\"param\",\"name\":\"balanceStatus\",\"value\":" + state +",\"importance\":\"Low\"}";
-      digitalWrite(balancePins[(int)command[1] - 48], command[2] == '1' ? HIGH : LOW);
-      Serial.println(_confirm);
-   }
+    ser = true;
+  }
+  if (command[0] == '1') {
+    String state = String(command[1] - 48) + String(command[2] == '1' ? 1 : 0);
+    String _confirm = "{\"origin\":\"Controller\",\"type\":\"param\",\"name\":\"balanceStatus\",\"value\":\"" + state + "\",\"importance\":\"Low\"}";
+    digitalWrite(balancePins[(int)command[1] - 48], command[2] == '1' ? HIGH : LOW);
+    Serial.println(_confirm);
+  }
 }
 
 int main(void) {
@@ -176,15 +178,15 @@ int main(void) {
   digitalWrite(DCDC3, LOW);
   digitalWrite(DCDC4, LOW);
   digitalWrite(DCDC5, LOW);
-  
+
 
   digitalWrite(serialLed1, HIGH);
   digitalWrite(serialLed2, HIGH);
   digitalWrite(serialLed3, HIGH);
 
   /**
-   * Request settings from servers
-   */
+     Request settings from servers
+  */
   unsigned long startTime = millis();
   byte requestIndex = 1;
   Serial.println("$init");
