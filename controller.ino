@@ -35,6 +35,9 @@ boolean balanceStatus3 = false;
 boolean balanceStatus4 = false;
 boolean balanceStatus5 = false;
 
+bool isCharging = false;
+bool isBalancing = false;
+
 int validate(const byte measurements[])
 {
   int i = 16;
@@ -44,6 +47,8 @@ int validate(const byte measurements[])
 
 void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte endIdx, byte groupNum) {
   unsigned long startTime = millis();
+  const byte balancePins[] = {A4, A3, A2, A1, A0};
+
   digitalWrite(nextSerOut, HIGH);
   SoftwareSerial groupSerial(serIn, serOut, false); //RX, TX
   groupSerial.begin(1200);
@@ -108,6 +113,18 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
       dtostrf(cellTemperature[i] + (180.00 - cellVoltage[i]), 4, 2, temp);
       measurements[0] += volt;
       measurements[1] += temp;
+
+      float fVolt = (float)atof(volt);
+      if (fVolt >= 3.0 && !isBalancing && isCharging) {
+        Serial.println("$!serialCharge");
+        do{}while(Serial.read() != 'X'); //Wait for response
+        isBalancing = true;
+        for (int b = 0; b <= 4; b++) {
+          digitalWrite(balancePins[b], HIGH);
+          delay(2000);
+        }
+      }
+
       if (i < endIdx) measurements[0].concat(",");
       if (i < endIdx) measurements[1].concat(",");
     }
@@ -126,19 +143,30 @@ void readSerialInput() {
      1XY = toggle balancer on/off X = Index, Y = State.
      110 = Set 2nd balancer LOW.
      131 = Set 4th balancer HIGH.
+
+     CY0 = Vehicle charging status. Y 0 = Off, 1 = On.
   */
   byte balancePins[] = {A4, A3, A2, A1, A0};
   char command[3];
-  bool ser = false;
   for (int i = 0; Serial.available() > 0 && i < 3; i++) {
     command[i] = Serial.read();
-    ser = true;
   }
   if (command[0] == '1') {
     String state = String(command[1] - 48) + String(command[2] == '1' ? 1 : 0);
     String _confirm = "{\"origin\":\"Controller\",\"type\":\"param\",\"name\":\"balanceStatus\",\"value\":\"" + state + "\",\"importance\":\"Low\"}";
     digitalWrite(balancePins[(int)command[1] - 48], command[2] == '1' ? HIGH : LOW);
     Serial.println(_confirm);
+  } else if (command[0] == 'C') {
+    if (command[1] == '1') {
+      isCharging = true;
+      isBalancing = false;
+    } else {
+      isCharging = false;
+      isBalancing = false;
+      for(int i = 0; i <= 4; i++){
+        digitalWrite(balancePins[i], LOW);
+      }
+    }
   }
 }
 
@@ -189,7 +217,7 @@ int main(void) {
   */
   unsigned long startTime = millis();
   byte requestIndex = 1;
-  Serial.println("$init");
+  Serial.println("$init ");
   do {
     digitalWrite(13, HIGH); //Wait for response
     if (millis() - startTime > 5000 * requestIndex) {
