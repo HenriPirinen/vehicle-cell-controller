@@ -38,6 +38,8 @@ boolean balanceStatus5 = false;
 bool isCharging = false;
 bool isBalancing = false;
 
+float voltageLimit = 3.70;
+
 int validate(const byte measurements[])
 {
   int i = 16;
@@ -115,9 +117,9 @@ void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte e
       measurements[1] += temp;
 
       float fVolt = (float)atof(volt);
-      if (fVolt >= 3.0 && !isBalancing && isCharging) {
+      if (fVolt >= voltageLimit && !isBalancing && isCharging) {
         Serial.println("$!serialCharge");
-        do{}while(Serial.read() != 'X'); //Wait for response
+        do {} while (Serial.readString() != "$B1"); //Wait for response
         isBalancing = true;
         for (int b = 0; b <= 4; b++) {
           digitalWrite(balancePins[b], HIGH);
@@ -157,15 +159,24 @@ void readSerialInput() {
     digitalWrite(balancePins[(int)command[1] - 48], command[2] == '1' ? HIGH : LOW);
     Serial.println(_confirm);
   } else if (command[0] == 'C') {
-    if (command[1] == '1') {
+    if (command[1] == '1') { //Vehicle is in charging state, monitor cell voltage. Set relays to 0
       isCharging = true;
       isBalancing = false;
+      for (int i = 0; i <= 4; i++) {
+        digitalWrite(balancePins[i], LOW);
+      }
     } else {
       isCharging = false;
       isBalancing = false;
-      for(int i = 0; i <= 4; i++){
+      for (int i = 0; i <= 4; i++) {
         digitalWrite(balancePins[i], LOW);
       }
+    }
+  } else if (command[0] == '$' && command[1] == 'B' && command[2] == '1') {
+    isBalancing = true;
+    for (int b = 0; b <= 4; b++) {
+      digitalWrite(balancePins[b], HIGH);
+      delay(2000);
     }
   }
 }
@@ -227,7 +238,20 @@ int main(void) {
   } while (Serial.available() == 0 && requestIndex <= 5); //Wait for response, if server does not respond => Use default settings
   digitalWrite(13, LOW);
   if (Serial.available() > 0) {
-    firstGroupIndex = Serial.parseInt();
+    String response = Serial.readString();
+    char * arguments;
+    const char * sstring = response.c_str();
+    arguments = strtok(sstring, ",");
+    int loopCount = 0;
+    while (arguments != NULL) {
+      if(loopCount == 0){
+        firstGroupIndex = String(arguments).toInt();
+      } else if(loopCount == 1){
+        voltageLimit = String(arguments).toFloat();
+      }
+      arguments = strtok(NULL, ",");
+      loopCount++;
+    }
   }
 
   digitalWrite(serialOut1, HIGH);
