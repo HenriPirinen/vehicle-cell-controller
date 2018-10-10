@@ -240,14 +240,15 @@ int main(void) {
   if (Serial.available() > 0) {
     String response = Serial.readString();
     char * arguments;
-    const char * sstring = response.c_str();
+    char * sstring = response.c_str();
     arguments = strtok(sstring, ",");
     int loopCount = 0;
     while (arguments != NULL) {
       if(loopCount == 0){
         firstGroupIndex = String(arguments).toInt();
       } else if(loopCount == 1){
-        voltageLimit = String(arguments).toFloat();
+        //voltageLimit = String(arguments).toFloat();
+        voltageLimit = atof(arguments);
       }
       arguments = strtok(NULL, ",");
       loopCount++;
