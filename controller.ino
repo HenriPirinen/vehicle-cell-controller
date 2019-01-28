@@ -5,29 +5,29 @@ int cellVoltage[41];
 int cellTemperature[41];
 byte firstGroupIndex = 0;
 
-byte DCDC1 = A4;
-byte DCDC2 = A3;
-byte DCDC3 = A2;
-byte DCDC4 = A1;
-byte DCDC5 = A0;
+const byte DCDC1 = A4;
+const byte DCDC2 = A3;
+const byte DCDC3 = A2;
+const byte DCDC4 = A1;
+const byte DCDC5 = A0;
 
-byte serialLed1 = 12;
-byte analogiaIn2 = A7;
-byte analogiaIn1 = A6;
-byte serialLed2 = A5;
-byte serialLed3 = 13;
+const byte serialLed1 = 12;
+const byte analogiaIn2 = A7;
+const byte analogiaIn1 = A6;
+const byte serialLed2 = A5;
+const byte serialLed3 = 13;
 
-byte serialOut1 = 2;
-byte serialOut2 = 4;
-byte serialOut3 = 6;
-byte serialOut4 = 8;
-byte serialOut5 = 10;
+const byte serialOut1 = 2;
+const byte serialOut2 = 4;
+const byte serialOut3 = 6;
+const byte serialOut4 = 8;
+const byte serialOut5 = 10;
 
-byte serialIn1 = 3;
-byte serialIn2 = 5;
-byte serialIn3 = 7;
-byte serialIn4 = 9;
-byte serialIn5 = 11;
+const byte serialIn1 = 3;
+const byte serialIn2 = 5;
+const byte serialIn3 = 7;
+const byte serialIn4 = 9;
+const byte serialIn5 = 11;
 
 boolean balanceStatus1 = false;
 boolean balanceStatus2 = false;
@@ -311,4 +311,3 @@ int main(void) {
     digitalWrite(serialLed3, LOW);
   }
 }
-
