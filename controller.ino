@@ -11,11 +11,8 @@ const byte DCDC3 = A2;
 const byte DCDC4 = A1;
 const byte DCDC5 = A0;
 
-const byte serialLed1 = 12;
 const byte analogiaIn2 = A7;
 const byte analogiaIn1 = A6;
-const byte serialLed2 = A5;
-const byte serialLed3 = 13;
 
 const byte serialOut1 = 2;
 const byte serialOut2 = 4;
@@ -45,6 +42,13 @@ int validate(const byte measurements[])
   int i = 16;
   while (--i > 1 && measurements[i] == measurements[1]);
   return i != 1;
+}
+
+void serIndicator(byte number){ //Blink serial debugging leds. Input number between 0 - 7.
+  const byte serLed[] = {12,A5,13}; //Debugging leds.
+  for(int i = 0; i <= 2; i++){
+    digitalWrite(serLed[i], ((number >> i) & 0x01) == 1 ? HIGH : LOW);
+  }
 }
 
 void handleGroup(byte nextSerOut, byte serIn, byte serOut, byte startIdx, byte endIdx, byte groupNum) {
@@ -202,9 +206,9 @@ int main(void) {
   pinMode(DCDC4, OUTPUT);
   pinMode(DCDC5, OUTPUT);
 
-  pinMode(serialLed1, OUTPUT);
-  pinMode(serialLed2, OUTPUT);
-  pinMode(serialLed3, OUTPUT);
+  pinMode(12, OUTPUT); //Serial indicators
+  pinMode(A5, OUTPUT);
+  pinMode(13, OUTPUT);
 
   digitalWrite(serialOut1, LOW);
   digitalWrite(serialOut2, LOW);
@@ -217,12 +221,7 @@ int main(void) {
   digitalWrite(DCDC3, LOW);
   digitalWrite(DCDC4, LOW);
   digitalWrite(DCDC5, LOW);
-
-
-  digitalWrite(serialLed1, HIGH);
-  digitalWrite(serialLed2, HIGH);
-  digitalWrite(serialLed3, HIGH);
-
+  serIndicator(7);
   /**
      Request settings from servers
   */
@@ -239,15 +238,14 @@ int main(void) {
   digitalWrite(13, LOW);
   if (Serial.available() > 0) {
     String response = Serial.readString();
-    char * arguments;
-    char * sstring = response.c_str();
+    char *arguments;
+    char *sstring = response.c_str();
     arguments = strtok(sstring, ",");
     int loopCount = 0;
     while (arguments != NULL) {
       if(loopCount == 0){
         firstGroupIndex = String(arguments).toInt();
       } else if(loopCount == 1){
-        //voltageLimit = String(arguments).toFloat();
         voltageLimit = atof(arguments);
       }
       arguments = strtok(NULL, ",");
@@ -259,55 +257,26 @@ int main(void) {
   delay(1000);
 
   while (true) {
-
-    digitalWrite(serialLed1, HIGH);
-    digitalWrite(serialLed2, LOW);
-    digitalWrite(serialLed3, LOW);
+    serIndicator(1);
     handleGroup(serialOut2, serialIn1, serialOut1, 1, 8, firstGroupIndex);
     readSerialInput();
     delay(50);
-    digitalWrite(serialLed1, LOW);
-    digitalWrite(serialLed2, LOW);
-    digitalWrite(serialLed3, LOW);
-
-    digitalWrite(serialLed1, LOW);
-    digitalWrite(serialLed2, HIGH);
-    digitalWrite(serialLed3, LOW);
+    serIndicator(2);
     handleGroup(serialOut3, serialIn2, serialOut2, 9, 16, (firstGroupIndex + 1));
     readSerialInput();
     delay(50);
-    digitalWrite(serialLed1, LOW);
-    digitalWrite(serialLed2, LOW);
-    digitalWrite(serialLed3, LOW);
-
-    digitalWrite(serialLed1, HIGH);
-    digitalWrite(serialLed2, HIGH);
-    digitalWrite(serialLed3, LOW);
+    serIndicator(3);
     handleGroup(serialOut4, serialIn3, serialOut3, 17, 24, (firstGroupIndex + 2));
     readSerialInput();
     delay(50);
-    digitalWrite(serialLed1, LOW);
-    digitalWrite(serialLed2, LOW);
-    digitalWrite(serialLed3, LOW);
-
-    digitalWrite(serialLed1, LOW);
-    digitalWrite(serialLed2, LOW);
-    digitalWrite(serialLed3, HIGH);
+    serIndicator(4);
     handleGroup(serialOut5, serialIn4, serialOut4, 25, 32, (firstGroupIndex + 3));
     readSerialInput();
     delay(50);
-    digitalWrite(serialLed1, LOW);
-    digitalWrite(serialLed2, LOW);
-    digitalWrite(serialLed3, LOW);
-
-    digitalWrite(serialLed1, HIGH);
-    digitalWrite(serialLed2, LOW);
-    digitalWrite(serialLed3, HIGH);
+    serIndicator(5);
     handleGroup(serialOut1, serialIn5, serialOut5, 33, 40, (firstGroupIndex + 4));
     readSerialInput();
     delay(50);
-    digitalWrite(serialLed1, LOW);
-    digitalWrite(serialLed2, LOW);
-    digitalWrite(serialLed3, LOW);
+    serIndicator(0);
   }
 }
