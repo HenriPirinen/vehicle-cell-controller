@@ -1,41 +1,17 @@
 #include <SoftwareSerial.h>
 #include "Arduino.h"
 
+const byte pinIO[3][5] = { //pinIO[0][x] = serOutput, pinIO[1][x] = serInput, pinIO[3][x] = balancePins
+  {2, 4, 6, 8, 10},
+  {3, 5, 7, 9, 11},
+  {A4, A3, A2, A1, A0}
+};
+bool isCharging = false;
+bool isBalancing = false;
+float voltageLimit = 3.70;
 int cellVoltage[41];
 int cellTemperature[41];
 byte firstGroupIndex = 0;
-
-const byte DCDC1 = A4;
-const byte DCDC2 = A3;
-const byte DCDC3 = A2;
-const byte DCDC4 = A1;
-const byte DCDC5 = A0;
-
-const byte analogiaIn2 = A7;
-const byte analogiaIn1 = A6;
-
-const byte serialOut1 = 2;
-const byte serialOut2 = 4;
-const byte serialOut3 = 6;
-const byte serialOut4 = 8;
-const byte serialOut5 = 10;
-
-const byte serialIn1 = 3;
-const byte serialIn2 = 5;
-const byte serialIn3 = 7;
-const byte serialIn4 = 9;
-const byte serialIn5 = 11;
-
-boolean balanceStatus1 = false;
-boolean balanceStatus2 = false;
-boolean balanceStatus3 = false;
-boolean balanceStatus4 = false;
-boolean balanceStatus5 = false;
-
-bool isCharging = false;
-bool isBalancing = false;
-
-float voltageLimit = 3.70;
 
 int validate(const byte measurements[])
 {
@@ -44,9 +20,9 @@ int validate(const byte measurements[])
   return i != 1;
 }
 
-void serIndicator(byte number){ //Blink serial debugging leds. Input number between 0 - 7.
-  const byte serLed[] = {12,A5,13}; //Debugging leds.
-  for(int i = 0; i <= 2; i++){
+void serIndicator(byte number) { //Blink serial debugging leds. Input number between 0 - 7.
+  const byte serLed[] = {12, A5, 13}; //Debugging leds.
+  for (int i = 0; i <= 2; i++) {
     digitalWrite(serLed[i], ((number >> i) & 0x01) == 1 ? HIGH : LOW);
   }
 }
@@ -187,43 +163,19 @@ void readSerialInput() {
 
 int main(void) {
   init();
-
   Serial.begin(9600);
-  pinMode(serialOut1, OUTPUT);
-  pinMode(serialIn1, INPUT);
-  pinMode(serialOut2, OUTPUT);
-  pinMode(serialIn2, INPUT);
-  pinMode(serialOut3, OUTPUT);
-  pinMode(serialIn3, INPUT);
-  pinMode(serialOut4, OUTPUT);
-  pinMode(serialIn4, INPUT);
-  pinMode(serialOut5, OUTPUT);
-  pinMode(serialIn5, INPUT);
-
-  pinMode(DCDC1, OUTPUT);
-  pinMode(DCDC2, OUTPUT);
-  pinMode(DCDC3, OUTPUT);
-  pinMode(DCDC4, OUTPUT);
-  pinMode(DCDC5, OUTPUT);
-
+  for (int row = 0; row <= 2; row++) { //Set pins to OUTPUT / INPUT. Set OUTPUT pins to LOW state.
+    for (int column = 0; column <= 4; column++) {
+      pinMode(pinIO[row][column], row == 0 || 2 ? OUTPUT : INPUT); //Row 0 = serialOut, Row = 2 balancePins, Row 1 = serialInput
+      if(row == 0 || 2) digitalWrite(pinIO[row][column], LOW);
+    }
+  }
   pinMode(12, OUTPUT); //Serial indicators
   pinMode(A5, OUTPUT);
   pinMode(13, OUTPUT);
-
-  digitalWrite(serialOut1, LOW);
-  digitalWrite(serialOut2, LOW);
-  digitalWrite(serialOut3, LOW);
-  digitalWrite(serialOut4, LOW);
-  digitalWrite(serialOut5, LOW);
-
-  digitalWrite(DCDC1, LOW);
-  digitalWrite(DCDC2, LOW);
-  digitalWrite(DCDC3, LOW);
-  digitalWrite(DCDC4, LOW);
-  digitalWrite(DCDC5, LOW);
   serIndicator(7);
   /**
-     Request settings from servers
+     Request settings from the API
   */
   unsigned long startTime = millis();
   byte requestIndex = 1;
@@ -234,18 +186,18 @@ int main(void) {
       Serial.println("$init");
       requestIndex++;
     }
-  } while (Serial.available() == 0 && requestIndex <= 5); //Wait for response, if server does not respond => Use default settings
+  } while (Serial.available() == 0 && requestIndex <= 5); //Wait for response, if API does not respond => Use default settings
   digitalWrite(13, LOW);
-  if (Serial.available() > 0) {
+  if (Serial.available() > 0) { //API reponse
     String response = Serial.readString();
     char *arguments;
     char *sstring = response.c_str();
     arguments = strtok(sstring, ",");
     int loopCount = 0;
     while (arguments != NULL) {
-      if(loopCount == 0){
+      if (loopCount == 0) {
         firstGroupIndex = String(arguments).toInt();
-      } else if(loopCount == 1){
+      } else if (loopCount == 1) {
         voltageLimit = atof(arguments);
       }
       arguments = strtok(NULL, ",");
@@ -253,28 +205,28 @@ int main(void) {
     }
   }
 
-  digitalWrite(serialOut1, HIGH);
+  digitalWrite(pinIO[0][0], HIGH);
   delay(1000);
 
-  while (true) {
+  while (true) { //Main loop
     serIndicator(1);
-    handleGroup(serialOut2, serialIn1, serialOut1, 1, 8, firstGroupIndex);
+    handleGroup(pinIO[0][1], pinIO[1][0], pinIO[0][0], 1, 8, firstGroupIndex);
     readSerialInput();
     delay(50);
     serIndicator(2);
-    handleGroup(serialOut3, serialIn2, serialOut2, 9, 16, (firstGroupIndex + 1));
+    handleGroup(pinIO[0][2], pinIO[1][1], pinIO[0][1], 9, 16, (firstGroupIndex + 1));
     readSerialInput();
     delay(50);
     serIndicator(3);
-    handleGroup(serialOut4, serialIn3, serialOut3, 17, 24, (firstGroupIndex + 2));
+    handleGroup(pinIO[0][3], pinIO[1][2], pinIO[0][2], 17, 24, (firstGroupIndex + 2));
     readSerialInput();
     delay(50);
     serIndicator(4);
-    handleGroup(serialOut5, serialIn4, serialOut4, 25, 32, (firstGroupIndex + 3));
+    handleGroup(pinIO[0][4], pinIO[1][3], pinIO[0][3], 25, 32, (firstGroupIndex + 3));
     readSerialInput();
     delay(50);
     serIndicator(5);
-    handleGroup(serialOut1, serialIn5, serialOut5, 33, 40, (firstGroupIndex + 4));
+    handleGroup(pinIO[0][0], pinIO[1][4], pinIO[0][4], 33, 40, (firstGroupIndex + 4));
     readSerialInput();
     delay(50);
     serIndicator(0);
